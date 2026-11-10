@@ -1,0 +1,58 @@
+[
+  {
+    "id": 7,
+    "file": "7_frontal.jpg",
+    "normal": false,
+    "split": "test",
+    "reference": "the cardiac contours are normal . basilar atelectasis . the lungs are clear . thoracic spondylosis . lower cervical arthritis ."
+  },
+  {
+    "id": 987,
+    "file": "987_frontal.jpg",
+    "normal": false,
+    "split": "test",
+    "reference": "the heart and lungs have in the interval . both lungs are clear and expanded . heart and mediastinum normal ."
+  },
+  {
+    "id": 1947,
+    "file": "1947_frontal.jpg",
+    "normal": false,
+    "split": "test",
+    "reference": "heart size within normal limits , stable mediastinal contours . no focal alveolar consolidation , no definite pleural effusion seen . a dense nodule in the right base suggests a previous granulomatous process . no typical findings of pulmonary edema . no pneumothorax ."
+  },
+  {
+    "id": 3062,
+    "file": "3062_frontal.jpg",
+    "normal": false,
+    "split": "test",
+    "reference": "normal heart size and mediastinal contours . no focal airspace consolidation . minimal blunting of the left costophrenic . no pneumothorax . visualized bony structures are unremarkable in appearance ."
+  },
+  {
+    "id": 69,
+    "file": "69_frontal.jpg",
+    "normal": true,
+    "split": "test",
+    "reference": "the heart is normal in size and contour . the lungs are clear , without evidence of infiltrate . there is no pneumothorax or effusion ."
+  },
+  {
+    "id": 1051,
+    "file": "1051_frontal.jpg",
+    "normal": true,
+    "split": "test",
+    "reference": "heart size and mediastinal contour are normal . pulmonary vascularity is normal . lungs are clear . no pleural effusions or pneumothoraces ."
+  },
+  {
+    "id": 2005,
+    "file": "2005_frontal.jpg",
+    "normal": true,
+    "split": "test",
+    "reference": "heart size normal . lungs are clear . are normal . no pneumonia , effusions , edema , pneumothorax , adenopathy , nodules or masses ."
+  },
+  {
+    "id": 3051,
+    "file": "3051_frontal.jpg",
+    "normal": true,
+    "split": "test",
+    "reference": "lungs are clear . there is no pneumothorax or pleural effusion . the heart and mediastinum are within normal limits . bony structures are intact ."
+  }
+]

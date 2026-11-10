@@ -1,106 +1,50 @@
-# COVID-19 CXR Report Generation
+# IU-Xray report generation
 
-Chest X-ray report generation using the **COVID-19 Radiography** dataset and **template reports**. **ResNet-18** encoder + **DistilGPT-2** decoder, with **Grad-CAM** visualization. FastAPI backend + React dashboard.
+A frontal chest X-ray goes in. A findings paragraph comes out.
 
-## Stack
+The encoder is a chest X-ray DenseNet-121 ([torchxrayvision](https://github.com/mlmed/torchxrayvision) `densenet121-res224-all`). It produces 49 spatial tokens, an MLP maps them into DistilGPT-2, and the decoder writes the findings section. A second model prepends the three most similar **training** reports before it writes. Both models were trained in `notebooks/cxr_report_gen_colab.ipynb`.
 
-- **Dataset**: COVID-19 Radiography (COVID, Normal, Viral Pneumonia, Lung Opacity) — template reports per class
-- **Model**: ResNet-18 encoder + DistilGPT-2 decoder, PyTorch
-- **Visualization**: Grad-CAM on ResNet-18
-- **Eval**: BLEU-4, ROUGE-L
-- **Deploy**: FastAPI backend, React (Vite) dashboard
+This is a research prototype on the Indiana University chest X-ray collection. It is not a medical device and must not be used for diagnosis.
 
-## Setup
+## Try an image
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate   # or .venv\Scripts\activate on Windows
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-**Data**: Download [COVID-19 Radiography Database](https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database) and place it so that **`data/COVID-19_Radiography_Dataset/`** contains subfolders **COVID**, **Normal**, **Viral Pneumonia**, **Lung_Opacity** (each with an `images/` subfolder or images directly inside).
+Open http://127.0.0.1:8000. Upload a frontal chest X-ray, or click one of the eight test images kept in `samples/`.
 
-## Template-based reports (recommended)
+The page always returns the three closest training reports. That part does not need the trained weights.
 
-The app can run in **template mode**: a 4-class classifier (Normal, COVID, Viral Pneumonia, Lung_Opacity) predicts the class, and the **exact template** for that class is returned. No gibberish—reports are always one of the four short, clean sentences.
-
-**Train the classifier** (after data is in place):
+The drafted findings need `norag_s1.pt` or `rag3_s3.pt`. Those files are large, so they stay on Google Drive at `MyDrive/cxr_report_gen/checkpoints/` and are not part of this project. If Google Drive is synced on this Mac, the page reads them from there and does not copy them. You can also point at the folder without moving the files:
 
 ```bash
-python train_classifier.py --epochs 5
-# Quick run: python train_classifier.py --epochs 3 --max_samples 5000
+CXR_CKPT_DIR="/path/to/cxr_report_gen/checkpoints" uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-This saves `checkpoints/cxr_classifier.pt`. The backend **prefers** this file when present and uses template mode; otherwise it falls back to the generative model (`cxr_epoch_*.pt`).
+## Test scores from the notebook
 
-## Training (generative model)
+Held-out test split, 640 studies. Model rows are mean ± std over seeds 1, 2, and 3. Decoding for each seed was chosen on validation.
 
-```bash
-./train_covid19.sh
-```
+| System | CheXbert F1 | CheXbert F1, abnormal | BLEU-4 | ROUGE-L |
+|---|---:|---:|---:|---:|
+| Majority report | 0.000 | 0.000 | 0.060 | 0.252 |
+| Nearest training image | 0.290 | 0.307 | 0.114 | 0.255 |
+| No RAG | 0.318 ± 0.028 | 0.329 ± 0.024 | 0.117 ± 0.003 | 0.278 ± 0.002 |
+| RAG-3 | 0.285 ± 0.034 | 0.298 ± 0.028 | 0.115 ± 0.006 | 0.277 ± 0.001 |
 
-Or:
+Full tables: `results/seed_summary_test.csv`, `results/seed_summary_val.csv`, `results/seed_runs_test.csv`, `results/seed_runs_val.csv`.
 
-```bash
-python train.py --config config_covid19.yaml
-```
-
-Checkpoints are saved under `checkpoints/` (e.g. `cxr_epoch_5.pt`). The backend uses `cxr_classifier.pt` if present, else the latest `cxr_epoch_*.pt`.
-
-## Evaluation
-
-```bash
-python eval.py --config config_covid19.yaml --checkpoint checkpoints/cxr_epoch_5.pt --max_samples 500
-```
-
-## Run the app
-
-**Terminal 1 – Backend** (from project root):
-
-```bash
-./start_backend.sh
-```
-
-**Terminal 2 – Dashboard**:
-
-```bash
-cd dashboard && npm install && npm run dev
-```
-
-Open **http://localhost:3000**. Upload a chest X-ray to get a generated report and optional Grad-CAM heatmap.
-
-## API Endpoints
-
-- `POST /predict` — image file → generated report (JSON `{ "report": "..." }`).
-- `POST /gradcam` — image file → Grad-CAM heatmap (JSON `{ "heatmap_b64": "..." }`).
-- `POST /predict_with_gradcam` — image file → report + heatmap in one response.
-- `GET /health` — health check.
-
-## Project layout
+## What is in the repo
 
 ```
-├── config.yaml              # COVID-19 default config
-├── config_covid19.yaml      # COVID-19 training config
-├── config_mac.yaml         # macOS quick train (2 epochs)
-├── train_covid19.sh        # Train on COVID-19 Radiography
-├── train_mac.sh            # Train on Mac (small subset)
-├── start_backend.sh
-├── requirements.txt
-├── train.py
-├── train_classifier.py   # 4-class classifier for template-based reports
-├── eval.py
-├── src/
-│   ├── data/
-│   │   └── covid19_dataset.py   # COVID-19 + template reports, CXRReportDataset
-│   ├── model/
-│   │   ├── encoder_decoder.py    # ResNet-18 + DistilGPT-2
-│   │   └── gradcam.py
-│   └── eval/
-├── backend/
-│   └── main.py
-└── dashboard/
+app/                  FastAPI page and the notebook's captioner
+samples/              eight frontal test images, for trying the page
+data/iu_xray/Kaggle/  studies.csv and feat_pooled.npy (retrieval index)
+notebooks/            the Colab training notebook
+results/              validation and test tables from that notebook
 ```
 
-## License
-
-COVID-19 Radiography data: see Kaggle/dataset terms. Code: use as you like.
+`studies.csv` row *i* is `feat_pooled.npy` row *i*. Retrieval uses only the training split. `feat_spatial.npy` is a local training cache and is not required to run the page.

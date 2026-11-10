@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IU-Xray report demo</title>
+  <style>
+    :root {
+      --ink: #1c1915;
+      --muted: #5c564c;
+      --line: #d9d1c3;
+      --paper: #f6f1e7;
+      --card: #fffdf8;
+      --teal: #0e5f5a;
+      --teal-soft: #e5f2f0;
+      --warn: #8a4b12;
+      --warn-bg: #f8ecdc;
+      --shadow: 0 16px 40px rgba(48, 36, 18, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 400px at 10% -10%, #efe4cf 0%, transparent 55%),
+        var(--paper);
+      font: 16px/1.5 "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+    }
+    header, main { width: min(1100px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 28px 0 8px; }
+    h1 { font-size: 2rem; font-weight: 600; letter-spacing: -0.03em; margin: 0 0 6px; }
+    .lede { color: var(--muted); max-width: 68ch; margin: 0; }
+    .pill {
+      display: inline-block;
+      margin-top: 14px;
+      background: var(--warn-bg);
+      color: var(--warn);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font: 13px/1.4 "Avenir Next", "Segoe UI", sans-serif;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 22px;
+      padding: 22px 0 48px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    h2 {
+      font: 600 13px/1 "Avenir Next", "Segoe UI", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    .drop {
+      border: 1.5px dashed #b7ad9d;
+      border-radius: 12px;
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 12px;
+      background: #fbf7f0;
+      cursor: pointer;
+    }
+    .drop.over { border-color: var(--teal); background: var(--teal-soft); }
+    .drop img { max-width: 100%; max-height: 240px; border-radius: 8px; }
+    .drop p { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+    input[type="file"] { display: none; }
+    .row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+    select, button {
+      font: 14px/1 "Avenir Next", "Segoe UI", sans-serif;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      padding: 10px 12px;
+    }
+    select { flex: 1; min-width: 0; }
+    button {
+      background: var(--teal);
+      color: white;
+      border: 0;
+      cursor: pointer;
+    }
+    .row > button { white-space: nowrap; flex: 0 0 auto; }
+    button:disabled { opacity: 0.55; cursor: wait; }
+    .samples { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+    .samples button {
+      padding: 2px;
+      background: transparent;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      overflow: visible;
+    }
+    .samples button.on { border-color: var(--teal); }
+    .samples img { display: block; width: 100%; height: 64px; object-fit: cover; border-radius: 6px; }
+    .samples span {
+      display: block;
+      font: 10px/1.25 "Avenir Next", "Segoe UI", sans-serif;
+      padding: 4px 0 2px;
+      color: var(--muted);
+      white-space: normal;
+    }
+    .report {
+      font-size: 1.15rem;
+      min-height: 4.5em;
+      margin: 0;
+    }
+    .note {
+      margin-top: 12px;
+      background: var(--warn-bg);
+      color: var(--warn);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: 14px/1.45 "Avenir Next", "Segoe UI", sans-serif;
+      overflow-wrap: anywhere;
+    }
+    .ref {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .neighbors { display: grid; gap: 10px; margin-top: 8px; }
+    .neighbor {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+    .neighbor strong {
+      font: 600 13px/1 "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--teal);
+    }
+    .status { color: var(--muted); font: 14px/1.4 "Avenir Next", "Segoe UI", sans-serif; }
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 1fr; }
+      .samples { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>IU-Xray findings</h1>
+    <p class="lede">Upload a frontal chest X-ray. The model drafts a findings section and shows the three closest reports from the training set.</p>
+    <div class="pill">Research demo only. Not for clinical use.</div>
+  </header>
+  <main class="layout">
+    <section>
+      <div class="card">
+        <h2>Image</h2>
+        <label class="drop" id="drop">
+          <div id="preview-slot"><p>Drop a PNG or JPG here, or click to choose one.</p></div>
+          <input id="file" type="file" accept="image/png,image/jpeg,image/webp" />
+        </label>
+        <div class="row">
+          <select id="model" aria-label="Model">
+            <option value="norag">No RAG (norag_s1)</option>
+            <option value="rag">RAG, 3 reports (rag3_s3)</option>
+          </select>
+          <button id="go" type="button">Read image</button>
+        </div>
+        <h2 style="margin-top:18px">Test images</h2>
+        <div class="samples" id="samples"></div>
+      </div>
+    </section>
+    <section>
+      <div class="card">
+        <h2>Generated findings</h2>
+        <p class="report" id="report">Choose an image to start.</p>
+        <div class="note" id="missing" hidden></div>
+        <div class="ref" id="reference" hidden></div>
+        <p class="status" id="status"></p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>Closest training reports</h2>
+        <div class="neighbors" id="neighbors"><p class="status">These appear after an image is read.</p></div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const fileInput = document.querySelector("#file");
+    const drop = document.querySelector("#drop");
+    const slot = document.querySelector("#preview-slot");
+    const go = document.querySelector("#go");
+    const reportEl = document.querySelector("#report");
+    const neighborsEl = document.querySelector("#neighbors");
+    const referenceEl = document.querySelector("#reference");
+    const missingEl = document.querySelector("#missing");
+    const statusEl = document.querySelector("#status");
+    const samplesEl = document.querySelector("#samples");
+    let currentFile = null;
+    let currentSample = "";
+
+    function showPreview(file) {
+      const url = URL.createObjectURL(file);
+      slot.innerHTML = "";
+      const img = document.createElement("img");
+      img.alt = "Selected chest X-ray";
+      img.src = url;
+      slot.appendChild(img);
+    }
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      currentFile = file;
+      currentSample = "";
+      document.querySelectorAll(".samples button").forEach((b) => b.classList.remove("on"));
+      showPreview(file);
+    });
+
+    ["dragover", "dragenter"].forEach((name) => {
+      drop.addEventListener(name, (ev) => { ev.preventDefault(); drop.classList.add("over"); });
+    });
+    ["dragleave", "drop"].forEach((name) => {
+      drop.addEventListener(name, (ev) => { ev.preventDefault(); drop.classList.remove("over"); });
+    });
+    drop.addEventListener("drop", (ev) => {
+      const file = ev.dataTransfer.files && ev.dataTransfer.files[0];
+      if (!file) return;
+      currentFile = file;
+      currentSample = "";
+      showPreview(file);
+    });
+
+    async function run() {
+      if (!currentFile) {
+        statusEl.textContent = "Add an image first.";
+        return;
+      }
+      go.disabled = true;
+      statusEl.textContent = "Reading the image. The first run loads the encoder and can take a minute.";
+      reportEl.textContent = "Working…";
+      missingEl.hidden = true;
+      referenceEl.hidden = true;
+      const body = new FormData();
+      body.append("file", currentFile, currentFile.name || "xray.jpg");
+      body.append("model", document.querySelector("#model").value);
+      if (currentSample) body.append("sample_id", currentSample);
+      try {
+        const res = await fetch("/api/predict", { method: "POST", body });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Request failed");
+        if (data.report_ready) {
+          reportEl.textContent = data.report;
+          missingEl.hidden = true;
+        } else {
+          reportEl.textContent = "Closest training reports are ready. The drafted sentence stays on Drive with the weights.";
+          missingEl.hidden = false;
+          missingEl.textContent = data.weights_note;
+        }
+        if (data.reference) {
+          referenceEl.hidden = false;
+          referenceEl.textContent = "Reference findings for this test image: " + data.reference;
+        }
+        neighborsEl.innerHTML = "";
+        data.neighbors.forEach((n) => {
+          const div = document.createElement("div");
+          div.className = "neighbor";
+          const title = document.createElement("strong");
+          title.textContent = n.rank + ".  similarity " + n.similarity.toFixed(2) + "  ·  study " + n.uid;
+          const p = document.createElement("p");
+          p.textContent = n.report;
+          div.appendChild(title);
+          div.appendChild(p);
+          neighborsEl.appendChild(div);
+        });
+        statusEl.textContent = data.model_label + " · " + data.run + " · beam " + data.beams + ", no-repeat " + data.ngram;
+      } catch (err) {
+        reportEl.textContent = "Could not read that image.";
+        statusEl.textContent = err.message;
+      } finally {
+        go.disabled = false;
+      }
+    }
+    go.addEventListener("click", run);
+
+    async function loadSamples() {
+      const rows = await (await fetch("/api/samples")).json();
+      rows.forEach((row) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.title = row.normal ? "Normal test study" : "Abnormal test study";
+        const img = document.createElement("img");
+        img.src = "/samples/" + row.file;
+        img.alt = "Study " + row.id;
+        const cap = document.createElement("span");
+        cap.append(document.createTextNode(row.normal ? "normal" : "abnormal"));
+        cap.append(document.createElement("br"));
+        cap.append(document.createTextNode(String(row.id)));
+        btn.appendChild(img);
+        btn.appendChild(cap);
+        btn.addEventListener("click", async () => {
+          document.querySelectorAll(".samples button").forEach((b) => b.classList.remove("on"));
+          btn.classList.add("on");
+          const blob = await (await fetch(img.src)).blob();
+          currentFile = new File([blob], row.file, { type: blob.type || "image/jpeg" });
+          currentSample = String(row.id);
+          showPreview(currentFile);
+        });
+        samplesEl.appendChild(btn);
+      });
+    }
+
+    loadSamples();
+  </script>
+</body>
+</html>

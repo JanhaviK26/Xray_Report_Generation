@@ -1,39 +1,18 @@
-# Python
 .venv/
 venv/
 __pycache__/
 *.py[cod]
-*.egg-info/
 .pytest_cache/
 .mypy_cache/
-
-# Large / local artifacts (do not upload to GitHub)
-/checkpoints/
-/data/
-*.pt
-*.pth
-*.ckpt
-*.h5
-*.onnx
-
-# Node / frontend
-dashboard/node_modules/
-dashboard/dist/
-dashboard/.vite/
-
-# OS / IDE
 .DS_Store
-.idea/
-.vscode/
-*.swp
-*.swo
 
-# Env / secrets
+# Trained weights are large and live in Google Drive (see README).
+checkpoints/*.pt
+checkpoints/*.pth
+
+# Spatial feature cache used for training, not for the upload demo.
+data/iu_xray/Kaggle/feat_spatial.npy
+data/iu_xray/images/
+*.log
 .env
 .env.*
-!.env.example
-
-# Logs / temp
-*.log
-tmp/
-temp/
