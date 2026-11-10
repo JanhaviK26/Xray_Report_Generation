@@ -8,21 +8,9 @@ This is a research prototype on the Indiana University chest X-ray collection. I
 
 ## Try an image
 
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
+Upload a frontal chest X-ray, or click one of the eight test images kept in `samples/`.
 
-Open http://127.0.0.1:8000. Upload a frontal chest X-ray, or click one of the eight test images kept in `samples/`.
-
-The page always returns the three closest training reports. That part does not need the trained weights.
-
-The drafted findings need `norag_s1.pt` or `rag3_s3.pt`. Those files are large, so they stay on Google Drive at `MyDrive/cxr_report_gen/checkpoints/` and are not part of this project. If Google Drive is synced on this Mac, the page reads them from there and does not copy them. You can also point at the folder without moving the files:
-
-```bash
-CXR_CKPT_DIR="/path/to/cxr_report_gen/checkpoints" uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
+The page always returns the three closest training reports. 
 
 ## Test scores from the notebook
 
